@@ -6,12 +6,12 @@ int main(int argc, char *argv[]) {
 	bzero(&args, sizeof(args_t));
 
 	if (argc == 1) {
-		fprintf(stderr, "error: destination address required.\n");
+		fprintf(stderr, "error: destination address required\n");
 		return EXIT_FAILURE;
 	}
 
 	if (parse_args(argc, argv)) {
-		fprintf(stderr, "error: parsing arguments.\n");
+		fprintf(stderr, "error: parsing arguments\n");
 		return EXIT_FAILURE;
 	}
 
