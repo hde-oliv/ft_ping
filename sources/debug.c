@@ -19,7 +19,7 @@ static void print_bits(size_t const size, void const *const ptr) {
 void debug_args(void) {
 	printf("Debug ------------------------------------------------------\n\n");
 	printf("Options flag: ");
-	print_bits(sizeof(int), &args.opt.n);
+	print_bits(sizeof(short), &args.opt.n);
 
 	printf("------------------------------------------------------------\n");
 	printf("Options arguments:\n");
