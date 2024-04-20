@@ -69,6 +69,7 @@ static int parse_flag_arg(int f, char *fl, char *arg) {
 	return EXIT_SUCCESS;
 }
 
+// TODO: Refactor
 int parse_args(int argc, char **argv) {
 	for (int i = 1; (i < argc); i++) {
 		if (i == (argc - 1)) {
@@ -97,6 +98,11 @@ int parse_args(int argc, char **argv) {
 				return EXIT_FAILURE;
 			}
 		}
+	}
+
+	if (args.hostname == NULL) {
+		fprintf(stderr, "error: destination address required\n");
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
