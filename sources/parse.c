@@ -57,12 +57,12 @@ static int parse_flag_arg(int f, char *fl, char *arg) {
 			return parse_timestamp(arg);
 			break;
 		default:
-			fprintf(stderr, "error: invalid flag %s", fl);
+			fprintf(stderr, "error: invalid flag %s\n", fl);
 			break;
 	}
 
 	if (errno) {
-		fprintf(stderr, "error: parsing %s option arg, %s", fl, strerror(errno));
+		fprintf(stderr, "error: parsing %s option arg, %s\n", fl, strerror(errno));
 		return EXIT_FAILURE;
 	}
 
@@ -82,7 +82,7 @@ int parse_args(int argc, char **argv) {
 		args.opt.n |= f;
 
 		if (args.opt.n & F_e) {
-			fprintf(stderr, "error: invalid flag %s", tmp);
+			fprintf(stderr, "error: invalid flag %s\n", tmp);
 			return EXIT_FAILURE;
 		}
 
@@ -90,7 +90,7 @@ int parse_args(int argc, char **argv) {
 			i++;  // incrementing here
 
 			if (i >= argc) {
-				fprintf(stderr, "error: missing arg for flag %s", tmp);
+				fprintf(stderr, "error: missing arg for flag %s\n", tmp);
 			}
 
 			parse_flag_arg(f, tmp, argv[i]);
