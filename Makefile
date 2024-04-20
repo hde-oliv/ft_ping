@@ -23,7 +23,7 @@ $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.c
 			$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)/$(INCS)
 
 $(NAME):	$(OBJS)
-			$(CC) -o $(NAME) $(OBJS)
+			$(CC) -lm -o $(NAME) $(OBJS)
 
 obj:
 			@mkdir -p $(OBJ_DIR)
