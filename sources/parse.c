@@ -10,14 +10,10 @@ static int match_flag(char *f) {
 		"", "-v", "-q", "-f", "-l", "-n", "-w", "-W", "-p", "-r", "-s", "-T", "--ttl", "--ip-timestamp", NULL,
 	};
 
-	size_t idx = 0;
-	char  *v   = lookup[idx];
-
-	for (int i = 0; v != NULL; i++) {
-		if (!strncmp(v, f, strlen(f))) {
+	for (int i = 0; lookup[i] != NULL; i++) {
+		if (!strncmp(lookup[i], f, strlen(f))) {
 			return (int)pow(2, i);	// NOTE: terrible solution
 		}
-		v = lookup[i];
 	}
 
 	return 0;
