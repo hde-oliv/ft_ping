@@ -1,4 +1,4 @@
-SRC		:=	main.c parse.c alloc.c
+SRC		:=	main.c parse.c alloc.c debug.c
 
 INC_DIR :=	headers
 SRC_DIR :=	sources

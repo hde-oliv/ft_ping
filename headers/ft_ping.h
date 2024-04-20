@@ -67,3 +67,6 @@ typedef struct s_args {
 
 // Parse
 int parse_args(int argc, char **argv);
+
+// Debug
+void debug_args(void);
