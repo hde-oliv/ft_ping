@@ -14,7 +14,7 @@ static int match_flag(char *f) {
 	char  *v   = lookup[idx];
 
 	for (int i = 0; v != NULL; i++) {
-		if (strncmp(v, f, strlen(f))) {
+		if (!strncmp(v, f, strlen(f))) {
 			return (int)pow(2, i);	// NOTE: terrible solution
 		}
 		v = lookup[i];
