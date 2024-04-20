@@ -7,11 +7,15 @@ int main(int argc, char *argv[]) {
 
 	if (argc == 1) {
 		fprintf(stderr, "error: destination address required.\n");
+		return EXIT_FAILURE;
 	}
 
 	if (parse_args(argc, argv)) {
 		fprintf(stderr, "error: parsing arguments.\n");
+		return EXIT_FAILURE;
 	}
+
+	debug_args();
 
 	return EXIT_SUCCESS;
 }
