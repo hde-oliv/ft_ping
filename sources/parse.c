@@ -1,3 +1,6 @@
+#include <math.h>
+#include <stdlib.h>
+
 #include "ft_ping.h"
 
 extern args_t args;
@@ -12,7 +15,7 @@ static int match_flag(char *f) {
 
 	for (int i = 0; v != NULL; i++) {
 		if (strncmp(v, f, strlen(f))) {
-			return i;
+			return (int)pow(2, i);	// NOTE: terrible solution
 		}
 		v = lookup[i];
 	}
@@ -57,7 +60,8 @@ static int parse_flag_arg(int f, char *fl, char *arg) {
 			return parse_timestamp(arg);
 			break;
 		default:
-			fprintf(stderr, "error: invalid flag %s\n", fl);
+			fprintf(stderr, "error: parsing %s option arg\n", fl);
+			return EXIT_FAILURE;
 			break;
 	}
 
@@ -87,13 +91,15 @@ int parse_args(int argc, char **argv) {
 		}
 
 		if (f != F_v && f != F_q && f != F_f && f != F_n && f != F_r) {
-			i++;  // incrementing here
+			i++;  // NOTE: incrementing here
 
 			if (i >= argc) {
 				fprintf(stderr, "error: missing arg for flag %s\n", tmp);
 			}
 
-			parse_flag_arg(f, tmp, argv[i]);
+			if (parse_flag_arg(f, tmp, argv[i])) {
+				return EXIT_FAILURE;
+			}
 		}
 	}
 
