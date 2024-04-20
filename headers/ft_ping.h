@@ -11,6 +11,7 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <uchar.h>
 #include <unistd.h>
 
 typedef enum e_flags {
@@ -65,8 +66,19 @@ typedef struct s_args {
 	char  *hostname;
 } args_t;
 
+typedef struct s_loop {
+	struct addrinfo *result;
+	struct addrinfo *rp;
+	struct addrinfo	 hints;
+	int				 sockfd;
+	char			 ipstr[INET6_ADDRSTRLEN];
+} loop_t;
+
 // Parse
 int parse_args(int argc, char **argv);
 
 // Debug
 void debug_args(void);
+
+// Run
+int run_loop(void);

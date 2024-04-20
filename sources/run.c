@@ -1,76 +1,100 @@
-/* #include "ft_ping.h" */
+#include <stdlib.h>
 
-/* void setup(void) { */
-/* 	struct addrinfo *result, *rp; */
-/* 	struct addrinfo	 hints = { 0 }; */
+#include "ft_ping.h"
 
-/* 	char *hostname = "google.com"; */
+extern args_t args;
+extern loop_t loop;
 
-/* 	int e; */
-/* 	int sockfd; */
+static struct icmp *alloc_icmp(int seq) {
+	struct icmp *p;
 
-/* 	char ipstr[INET6_ADDRSTRLEN]; */
+	p = calloc(1, sizeof(struct icmp));
 
-/* 	e = getaddrinfo(hostname, NULL, &hints, &result); */
+	p->icmp_type  = ICMP_ECHO;
+	p->icmp_code  = 0;
+	p->icmp_cksum = 0;	// TODO: need to do validation
+	p->icmp_id	  = getpid();
+	p->icmp_seq	  = seq;
 
-/* 	if (e != 0) { */
-/* 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(e)); */
-/* 		exit(EXIT_FAILURE); */
-/* 	} */
+	return p;
+}
 
-/* 	for (rp = result; rp != NULL; rp = rp->ai_next) { */
-/* 		void *addr; */
-/* 		char *ipver; */
+static void clear(void) { freeaddrinfo(loop.result); }
 
-/* 		// Get the pointer to the address */
-/* 		if (rp->ai_family == AF_INET) {	 // IPv4 */
-/* 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)rp->ai_addr; */
-/* 			addr					 = &(ipv4->sin_addr); */
-/* 			ipver					 = "IPv4"; */
-/* 		} else {  // IPv6 */
-/* 			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)rp->ai_addr; */
-/* 			addr					  = &(ipv6->sin6_addr); */
-/* 			ipver					  = "IPv6"; */
-/* 		} */
+int setup_connection(void) {
+	int err;
 
-/* 		// Convert the IP to a string and print it */
-/* 		inet_ntop(rp->ai_family, addr, ipstr, sizeof ipstr); */
-/* 		printf("%s: %s\n", ipver, ipstr); */
+	loop.hints.ai_family   = AF_UNSPEC;
+	loop.hints.ai_socktype = SOCK_RAW;
+	loop.hints.ai_flags	   = AI_PASSIVE;
+	loop.hints.ai_protocol = IPPROTO_ICMP;
 
-/* 		sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol); */
+	err = getaddrinfo(args.hostname, NULL, &loop.hints, &loop.result);
+	if (err) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(err));
+		return EXIT_FAILURE;
+	}
 
-/* 		if (sockfd == -1) { */
-/* 			perror("socket"); */
-/* 			continue; */
-/* 		} */
+	for (loop.rp = loop.result; loop.rp != NULL; loop.rp = loop.rp->ai_next) {
+		// TODO: Refactor, must work with ipv4 only
+		if (loop.rp->ai_family == AF_INET) {
+			struct sockaddr_in *ipv4 = (struct sockaddr_in *)loop.rp->ai_addr;
+			void			   *addr = &(ipv4->sin_addr);
 
-/* 		e = connect(sockfd, rp->ai_addr, rp->ai_addrlen); */
+			inet_ntop(loop.rp->ai_family, addr, loop.ipstr, sizeof(loop.ipstr));
+		}
 
-/* 		printf("%d\n", e); */
+		loop.sockfd = socket(loop.rp->ai_family, loop.rp->ai_socktype, loop.rp->ai_protocol);
 
-/* 		if (e == 0) { */
-/* 			break; */
-/* 		} else { */
-/* 			fprintf(stderr, "connect: %d\n", e); */
-/* 		} */
+		if (loop.sockfd == -1) {
+			perror("socket");
+			continue;
+		}
 
-/* 		close(sockfd); */
-/* 	} */
+		err = connect(loop.sockfd, loop.rp->ai_addr, loop.rp->ai_addrlen);
 
-/* 	if (rp == NULL) { */
-/* 		fprintf(stderr, "could not bind\n"); */
-/* 		exit(EXIT_FAILURE); */
-/* 	} */
+		if (err) {
+			fprintf(stderr, "connection: %s\n", strerror(err));
+			close(loop.sockfd);
+			return EXIT_FAILURE;
+		}
+		break;
+	}
 
-/* 	e = sendto(sockfd, &packet, sizeof(packet), 0, rp->ai_addr, rp->ai_addrlen); */
+	if (loop.rp == NULL) {
+		fprintf(stderr, "could not connect with any address\n");
+		return EXIT_FAILURE;
+	}
 
-/* 	printf("sendto: %d\n", e); */
+	return EXIT_SUCCESS;
+}
 
-/* 	char buf[sizeof(packet)]; */
+int send_packets() {
+	int	  err;
+	void *packet = alloc_icmp(1);
 
-/* 	e = recvfrom(sockfd, buf, sizeof(packet), 0, rp->ai_addr, &rp->ai_addrlen); */
+	err = sendto(loop.sockfd, &packet, sizeof(packet), 0, loop.rp->ai_addr, loop.rp->ai_addrlen);
 
-/* 	printf("recvfrom: %d | %s\n", e, buf); */
+	printf("sendto: %d\n", err);
 
-/* 	freeaddrinfo(result); */
-/* } */
+	char buf[sizeof(packet)];
+
+	err = recvfrom(loop.sockfd, buf, sizeof(packet), 0, loop.rp->ai_addr, &loop.rp->ai_addrlen);
+
+	printf("recvfrom: %d | %s\n", err, buf);
+
+	return EXIT_SUCCESS;
+}
+
+int run_loop(void) {
+	if (setup_connection()) {
+		return EXIT_FAILURE;
+	}
+
+	if (send_packets()) {
+		return EXIT_FAILURE;
+	}
+
+	clear();
+	return EXIT_SUCCESS;
+}
