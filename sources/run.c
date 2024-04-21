@@ -1,23 +1,10 @@
-#include <stdlib.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include "ft_ping.h"
 
 extern args_t args;
 extern loop_t loop;
-
-static struct icmp *alloc_icmp(int seq) {
-	struct icmp *p;
-
-	p = calloc(1, sizeof(struct icmp));
-
-	p->icmp_type  = ICMP_ECHO;
-	p->icmp_code  = 0;
-	p->icmp_cksum = 0;	// TODO: need to do validation
-	p->icmp_id	  = getpid();
-	p->icmp_seq	  = seq;
-
-	return p;
-}
 
 static void clear(void) { freeaddrinfo(loop.result); }
 
@@ -51,7 +38,7 @@ int setup_connection(void) {
 			continue;
 		}
 
-		err = connect(loop.sockfd, loop.rp->ai_addr, loop.rp->ai_addrlen);
+		/* err = connect(loop.sockfd, loop.rp->ai_addr, loop.rp->ai_addrlen); */
 
 		if (err) {
 			fprintf(stderr, "connection: %s\n", strerror(err));
@@ -69,19 +56,50 @@ int setup_connection(void) {
 	return 0;
 }
 
-int send_packets() {
-	int	  err;
-	void *packet = alloc_icmp(1);
+unsigned short get_cksum(unsigned short *b, int len) {
+	unsigned sum;
 
-	err = sendto(loop.sockfd, &packet, sizeof(packet), 0, loop.rp->ai_addr, loop.rp->ai_addrlen);
+	for (sum = 0; len > 1; len -= 2) {
+		sum += *b++;
+	}
 
-	printf("sendto: %d\n", err);
+	if (len == 1) {
+		sum += *(unsigned char *)b;
+	}
 
-	char buf[sizeof(packet)];
+	sum = (sum >> 16) + (sum & 0xFFFF);
+	sum += (sum >> 16);
+	return ~sum;
+}
 
-	err = recvfrom(loop.sockfd, buf, sizeof(packet), 0, loop.rp->ai_addr, &loop.rp->ai_addrlen);
+int send_packets(void) {
+	int			 PACKET_SIZE = 64;
+	char		 packet[PACKET_SIZE];
+	struct icmp *header = (struct icmp *)packet;
 
-	printf("recvfrom: %d | %s\n", err, buf);
+	for (int i = 0;; i++) {
+		bzero(packet, PACKET_SIZE);
+
+		header->icmp_type  = ICMP_ECHO;
+		header->icmp_code  = 0;
+		header->icmp_id	   = getpid();
+		header->icmp_seq   = (i >> 8) | (i << 8);
+		header->icmp_cksum = get_cksum((unsigned short *)packet, PACKET_SIZE);
+
+		if (sendto(loop.sockfd, packet, PACKET_SIZE, 0, loop.rp->ai_addr, loop.rp->ai_addrlen) < 0) {
+			perror("sendto");
+			close(loop.sockfd);
+			return 1;
+		}
+
+		char	buf[PACKET_SIZE];
+		ssize_t r = recvfrom(loop.sockfd, buf, PACKET_SIZE, 0, NULL, NULL);
+		if (r < 0) {
+			perror("recvfrom");
+			close(loop.sockfd);
+			return 1;
+		}
+	}
 
 	return 0;
 }
@@ -90,6 +108,8 @@ int run_loop(void) {
 	if (setup_connection()) {
 		return 1;
 	}
+
+	debug_loop();
 
 	if (send_packets()) {
 		return 1;

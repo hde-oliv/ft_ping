@@ -3,7 +3,7 @@
 extern args_t args;
 extern loop_t loop;
 
-static void print_bits(size_t const size, void const *const ptr) {
+void print_bits(size_t size, void *ptr) {
 	unsigned char *b = (unsigned char *)ptr;
 	unsigned char  byte;
 	int			   i, j;
