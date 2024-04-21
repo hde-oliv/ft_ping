@@ -1,11 +1,3 @@
-#include <bits/time.h>
-#include <netinet/ip_icmp.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
-
 #include "ft_ping.h"
 
 static unsigned short get_cksum(unsigned short *b, int len) {

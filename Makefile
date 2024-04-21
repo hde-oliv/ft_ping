@@ -1,11 +1,9 @@
-SRC		:=	main.c parse.c debug.c run.c packet.c
-
 INC_DIR :=	headers
 SRC_DIR :=	sources
 OBJ_DIR :=	objects
 
 INCS	:=	$(INC_DIR)
-SRCS	:=	$(addprefix $(SRC_DIR)/,$(SRC))
+SRCS	:=	$(shell find $(SRC_DIR) -name '*.c')
 OBJS    :=	$(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CC		:=	clang

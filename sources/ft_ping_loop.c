@@ -1,5 +1,7 @@
 #include <arpa/inet.h>
+#include <bits/time.h>
 #include <netinet/in.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
@@ -8,6 +10,7 @@ extern args_t args;
 extern loop_t loop;
 
 #define SECOND 1000000
+#define MILLION 1000000L
 
 int setup_socket(void) {
 	int err;
@@ -51,8 +54,17 @@ int send_packets(void) {
 	int	 PACKET_SIZE = 64;
 	char packet[PACKET_SIZE];
 
+	struct timespec start, end;
+	double			time;
+
 	for (int i = 0;; i++) {
 		setup_packet(packet, PACKET_SIZE, i);
+
+		if (clock_gettime(CLOCK_REALTIME, &start) == -1) {
+			perror("clock_gettime");
+			close(loop.sockfd);
+			return 1;
+		}
 
 		if (sendto(loop.sockfd, packet, PACKET_SIZE, 0, loop.rp->ai_addr, loop.rp->ai_addrlen) < 0) {
 			perror("sendto");
@@ -69,12 +81,23 @@ int send_packets(void) {
 			return 1;
 		}
 
-		if (validate_packet(packet, buf, PACKET_SIZE)) {
-			fprintf(stderr, "invalid incoming packet\n");
+		printf("ipv4 header: ");
+		print_bytes(20, buf);
+
+		if (clock_gettime(CLOCK_REALTIME, &end) == -1) {
+			perror("clock_gettime");
+			close(loop.sockfd);
 			return 1;
 		}
 
-		printf("%d bytes from %s: icmp_seq=%d ttl=? time=?\n", PACKET_SIZE, loop.ipstr, i);
+		if (validate_packet(packet, buf, PACKET_SIZE)) {
+			fprintf(stderr, "invalid incoming packet\n");
+			close(loop.sockfd);
+			return 1;
+		}
+
+		time = (end.tv_nsec - start.tv_nsec) / 1000000.0;
+		printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.1lf ms\n", PACKET_SIZE, loop.ipstr, i, buf[8], time);
 
 		usleep(SECOND);
 	}
