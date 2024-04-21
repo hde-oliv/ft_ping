@@ -1,6 +1,7 @@
 #include "ft_ping.h"
 
 extern args_t args;
+extern loop_t loop;
 
 static void print_bits(size_t const size, void const *const ptr) {
 	unsigned char *b = (unsigned char *)ptr;
@@ -16,12 +17,19 @@ static void print_bits(size_t const size, void const *const ptr) {
 	printf("\n");
 }
 
+void debug_loop(void) {
+	printf("Debug loop -------------------------------------------------\n\n");
+	printf("Result: %p\n", loop.result);
+	printf("RP: %p\n", loop.result);
+	printf("Socket fd: %d\n", loop.sockfd);
+	printf("Ip address: %s\n", loop.ipstr);
+	printf("------------------------------------------------------------\n\n");
+}
+
 void debug_args(void) {
-	printf("Debug ------------------------------------------------------\n\n");
+	printf("Debug args -------------------------------------------------\n\n");
 	printf("Options flag: ");
 	print_bits(sizeof(short), &args.opt.n);
-
-	printf("------------------------------------------------------------\n");
 	printf("Options arguments:\n");
 	printf("\tPreload: %d\n", args.preload);
 	printf("\tTimeout: %d\n", args.timeout);
@@ -31,7 +39,6 @@ void debug_args(void) {
 	printf("\tTOS: %d\n", args.tos);
 	printf("\tTTL: %d\n", args.ttl);
 	printf("\tTimestamp: %s\n", args.timestamp);
-
-	printf("------------------------------------------------------------\n");
 	printf("Hostname: %s\n", args.hostname);
+	printf("------------------------------------------------------------\n\n");
 }
