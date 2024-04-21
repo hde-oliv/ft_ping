@@ -24,7 +24,7 @@ $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.c
 
 $(NAME):	$(OBJS)
 			$(CC) -lm -o $(NAME) $(OBJS)
-			@sudo setcap cap_net_raw+eip ./ft_ping
+# @sudo setcap cap_net_raw+eip ./ft_ping
 
 obj:
 			@mkdir -p $(OBJ_DIR)
