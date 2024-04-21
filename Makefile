@@ -23,7 +23,7 @@ $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.c
 			$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)/$(INCS)
 
 $(NAME):	$(OBJS)
-			$(CC) -lm -o cxz $(NAME) $(OBJS)
+			$(CC) -lm -o cz $(NAME) $(OBJS)
 # @sudo setcap cap_net_raw+eip ./ft_ping
 
 obj:
