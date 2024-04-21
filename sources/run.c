@@ -6,9 +6,7 @@
 extern args_t args;
 extern loop_t loop;
 
-static void clear(void) { freeaddrinfo(loop.result); }
-
-int setup_connection(void) {
+int setup_socket(void) {
 	int err;
 
 	loop.hints.ai_family   = AF_UNSPEC;
@@ -23,29 +21,19 @@ int setup_connection(void) {
 	}
 
 	for (loop.rp = loop.result; loop.rp != NULL; loop.rp = loop.rp->ai_next) {
-		// TODO: Refactor, must work with ipv4 only
 		if (loop.rp->ai_family == AF_INET) {
-			struct sockaddr_in *ipv4 = (struct sockaddr_in *)loop.rp->ai_addr;
-			void			   *addr = &(ipv4->sin_addr);
+			inet_ntop(loop.rp->ai_family, &(((struct sockaddr_in *)loop.rp->ai_addr)->sin_addr), loop.ipstr,
+					  sizeof(loop.ipstr));
 
-			inet_ntop(loop.rp->ai_family, addr, loop.ipstr, sizeof(loop.ipstr));
+			loop.sockfd = socket(loop.rp->ai_family, loop.rp->ai_socktype, loop.rp->ai_protocol);
+
+			if (loop.sockfd == -1) {
+				perror("socket");
+				return 1;
+			}
+
+			break;
 		}
-
-		loop.sockfd = socket(loop.rp->ai_family, loop.rp->ai_socktype, loop.rp->ai_protocol);
-
-		if (loop.sockfd == -1) {
-			perror("socket");
-			continue;
-		}
-
-		/* err = connect(loop.sockfd, loop.rp->ai_addr, loop.rp->ai_addrlen); */
-
-		if (err) {
-			fprintf(stderr, "connection: %s\n", strerror(err));
-			close(loop.sockfd);
-			return 1;
-		}
-		break;
 	}
 
 	if (loop.rp == NULL) {
@@ -56,35 +44,13 @@ int setup_connection(void) {
 	return 0;
 }
 
-unsigned short get_cksum(unsigned short *b, int len) {
-	unsigned sum;
-
-	for (sum = 0; len > 1; len -= 2) {
-		sum += *b++;
-	}
-
-	if (len == 1) {
-		sum += *(unsigned char *)b;
-	}
-
-	sum = (sum >> 16) + (sum & 0xFFFF);
-	sum += (sum >> 16);
-	return ~sum;
-}
-
 int send_packets(void) {
 	int			 PACKET_SIZE = 64;
 	char		 packet[PACKET_SIZE];
 	struct icmp *header = (struct icmp *)packet;
 
 	for (int i = 0;; i++) {
-		bzero(packet, PACKET_SIZE);
-
-		header->icmp_type  = ICMP_ECHO;
-		header->icmp_code  = 0;
-		header->icmp_id	   = getpid();
-		header->icmp_seq   = (i >> 8) | (i << 8);
-		header->icmp_cksum = get_cksum((unsigned short *)packet, PACKET_SIZE);
+		setup_packet(header, packet, PACKET_SIZE, i);
 
 		if (sendto(loop.sockfd, packet, PACKET_SIZE, 0, loop.rp->ai_addr, loop.rp->ai_addrlen) < 0) {
 			perror("sendto");
@@ -99,13 +65,20 @@ int send_packets(void) {
 			close(loop.sockfd);
 			return 1;
 		}
+
+		if (validate_packet(packet, buf, PACKET_SIZE)) {
+			fprintf(stderr, "invalid incoming packet\n");
+			return 1;
+		}
 	}
 
 	return 0;
 }
 
+static void clear_loop(void) { freeaddrinfo(loop.result); }
+
 int run_loop(void) {
-	if (setup_connection()) {
+	if (setup_socket()) {
 		return 1;
 	}
 
@@ -115,6 +88,6 @@ int run_loop(void) {
 		return 1;
 	}
 
-	clear();
+	clear_loop();
 	return 0;
 }

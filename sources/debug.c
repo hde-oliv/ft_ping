@@ -3,7 +3,17 @@
 extern args_t args;
 extern loop_t loop;
 
-void print_bits(size_t size, void *ptr) {
+void print_bytes(int size, void *ptr) {
+	unsigned char *p = ptr;
+	int			   i;
+
+	for (i = 0; i < size; i++) {
+		printf("%02hhX ", p[i]);
+	}
+	printf("\n");
+}
+
+void print_bits(int size, void *ptr) {
 	unsigned char *b = (unsigned char *)ptr;
 	unsigned char  byte;
 	int			   i, j;

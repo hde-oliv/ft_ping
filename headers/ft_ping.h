@@ -82,7 +82,12 @@ int parse_args(int argc, char **argv);
 // Debug
 void debug_args(void);
 void debug_loop(void);
-void print_bits(size_t size, void *ptr);
+void print_bytes(int size, void *ptr);
+void print_bits(int size, void *ptr);
 
 // Run
 int run_loop(void);
+
+// Packet
+void setup_packet(struct icmp *h, void *p, size_t p_siz, short seq);
+int	 validate_packet(void *s, void *r, short p_siz);
