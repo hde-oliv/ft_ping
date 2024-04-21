@@ -21,12 +21,12 @@ static int match_flag(char *f) {
 
 static int parse_pattern(char *arg) {
 	args.pattern = arg;	 // TODO: parse
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 static int parse_timestamp(char *arg) {
 	args.timestamp = arg;  // TODO: parse
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 static int parse_flag_arg(int f, char *fl, char *arg) {
@@ -57,16 +57,16 @@ static int parse_flag_arg(int f, char *fl, char *arg) {
 			break;
 		default:
 			fprintf(stderr, "error: parsing %s option arg\n", fl);
-			return EXIT_FAILURE;
+			return 1;
 			break;
 	}
 
 	if (errno) {
 		fprintf(stderr, "error: parsing %s option arg, %s\n", fl, strerror(errno));
-		return EXIT_FAILURE;
+		return 1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 // TODO: Refactor
@@ -84,7 +84,7 @@ int parse_args(int argc, char **argv) {
 
 		if (args.opt.n & F_e) {
 			fprintf(stderr, "error: invalid flag %s\n", tmp);
-			return EXIT_FAILURE;
+			return 1;
 		}
 
 		if (f != F_v && f != F_q && f != F_f && f != F_n && f != F_r) {
@@ -95,15 +95,15 @@ int parse_args(int argc, char **argv) {
 			}
 
 			if (parse_flag_arg(f, tmp, argv[i])) {
-				return EXIT_FAILURE;
+				return 1;
 			}
 		}
 	}
 
 	if (args.hostname == NULL) {
 		fprintf(stderr, "error: destination address required\n");
-		return EXIT_FAILURE;
+		return 1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }

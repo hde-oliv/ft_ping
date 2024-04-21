@@ -9,20 +9,20 @@ int main(int argc, char *argv[]) {
 
 	if (argc == 1) {
 		fprintf(stderr, "error: destination address required\n");
-		return EXIT_FAILURE;
+		return 1;
 	}
 
 	if (parse_args(argc, argv)) {
 		fprintf(stderr, "error: parsing arguments\n");
-		return EXIT_FAILURE;
+		return 1;
 	}
 
 	debug_args();
 
 	if (run_loop()) {
 		fprintf(stderr, "error: running loop\n");
-		return EXIT_FAILURE;
+		return 1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }

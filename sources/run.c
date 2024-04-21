@@ -32,7 +32,7 @@ int setup_connection(void) {
 	err = getaddrinfo(args.hostname, NULL, &loop.hints, &loop.result);
 	if (err) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(err));
-		return EXIT_FAILURE;
+		return 1;
 	}
 
 	for (loop.rp = loop.result; loop.rp != NULL; loop.rp = loop.rp->ai_next) {
@@ -56,17 +56,17 @@ int setup_connection(void) {
 		if (err) {
 			fprintf(stderr, "connection: %s\n", strerror(err));
 			close(loop.sockfd);
-			return EXIT_FAILURE;
+			return 1;
 		}
 		break;
 	}
 
 	if (loop.rp == NULL) {
 		fprintf(stderr, "could not connect with any address\n");
-		return EXIT_FAILURE;
+		return 1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 int send_packets() {
@@ -83,18 +83,18 @@ int send_packets() {
 
 	printf("recvfrom: %d | %s\n", err, buf);
 
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 int run_loop(void) {
 	if (setup_connection()) {
-		return EXIT_FAILURE;
+		return 1;
 	}
 
 	if (send_packets()) {
-		return EXIT_FAILURE;
+		return 1;
 	}
 
 	clear();
-	return EXIT_SUCCESS;
+	return 0;
 }
