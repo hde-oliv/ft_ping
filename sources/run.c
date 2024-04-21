@@ -48,12 +48,11 @@ int setup_socket(void) {
 }
 
 int send_packets(void) {
-	int			 PACKET_SIZE = 64;
-	char		 packet[PACKET_SIZE];
-	struct icmp *header = (struct icmp *)packet;
+	int	 PACKET_SIZE = 64;
+	char packet[PACKET_SIZE];
 
 	for (int i = 0;; i++) {
-		setup_packet(header, packet, PACKET_SIZE, i);
+		setup_packet(packet, PACKET_SIZE, i);
 
 		if (sendto(loop.sockfd, packet, PACKET_SIZE, 0, loop.rp->ai_addr, loop.rp->ai_addrlen) < 0) {
 			perror("sendto");
@@ -62,7 +61,7 @@ int send_packets(void) {
 		}
 
 		char	buf[PACKET_SIZE + 20];	// NOTE: +20 Because of ivp4 header
-		ssize_t r = recvfrom(loop.sockfd, buf, PACKET_SIZE + 20, 0, NULL, NULL);
+		ssize_t r = recvfrom(loop.sockfd, buf, PACKET_SIZE + 20, 0, loop.rp->ai_addr, &loop.rp->ai_addrlen);
 
 		if (r < 0) {
 			perror("recvfrom");

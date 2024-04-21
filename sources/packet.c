@@ -1,5 +1,10 @@
+#include <bits/time.h>
 #include <netinet/ip_icmp.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "ft_ping.h"
 
@@ -18,15 +23,36 @@ static unsigned short get_cksum(unsigned short *b, int len) {
 	return ~sum;
 }
 
-void setup_packet(struct icmp *h, void *p, size_t p_siz, short seq) {
+static void fill_packet(char *p, int p_size) {
+	struct timespec ts;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	memcpy(p, &ts.tv_sec, 4);
+	p += 4;
+	memset(p, 0, 4);
+	p += 4;
+
+	p_size = p_size - 8 - 8;
+
+	for (int i = 0; i < p_size; i++) {
+		*p++ = i;
+	}
+}
+
+void setup_packet(void *p, size_t p_siz, short seq) {
 	bzero(p, p_siz);
 
-	h->icmp_type  = ICMP_ECHO;
-	h->icmp_code  = 0;
-	h->icmp_id	  = getpid();
-	h->icmp_seq	  = (seq >> 8) | (seq << 8);
-	h->icmp_cksum = 0;	// NOTE: needs to reset cksum
-	h->icmp_cksum = get_cksum((unsigned short *)p, p_siz);
+	icmp_header_t *h = (icmp_header_t *)p;
+
+	h->type	 = ICMP_ECHO;
+	h->code	 = 0;
+	h->id	 = (short)getpid();
+	h->seq	 = (seq >> 8) | (seq << 8);
+	h->cksum = 0;
+
+	fill_packet(&h->data, p_siz);
+
+	h->cksum = get_cksum((unsigned short *)p, p_siz);
 }
 
 int validate_packet(void *s, void *r, short p_siz) {

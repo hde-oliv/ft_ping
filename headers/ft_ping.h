@@ -76,6 +76,15 @@ typedef struct s_loop {
 	char			 ipstr[INET6_ADDRSTRLEN];
 } loop_t;
 
+typedef struct s_icmp {
+	char  type;
+	char  code;
+	short cksum;
+	short id;
+	short seq;
+	char  data;
+} icmp_header_t;
+
 // Parse
 int parse_args(int argc, char **argv);
 
@@ -89,5 +98,5 @@ void print_bits(int size, void *ptr);
 int run_loop(void);
 
 // Packet
-void setup_packet(struct icmp *h, void *p, size_t p_siz, short seq);
+void setup_packet(void *p, size_t p_siz, short seq);
 int	 validate_packet(void *s, void *r, short p_siz);
