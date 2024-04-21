@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	debug_args();
+	// debug_args();
 
 	if (run_loop()) {
 		fprintf(stderr, "error: running loop\n");

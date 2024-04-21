@@ -1,10 +1,13 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 #include "ft_ping.h"
 
 extern args_t args;
 extern loop_t loop;
+
+#define SECOND 1000000
 
 int setup_socket(void) {
 	int err;
@@ -71,6 +74,10 @@ int send_packets(void) {
 			fprintf(stderr, "invalid incoming packet\n");
 			return 1;
 		}
+
+		printf("%d bytes from %s: icmp_seq=%d ttl=? time=?\n", PACKET_SIZE, loop.ipstr, i);
+
+		usleep(SECOND);
 	}
 
 	return 0;
@@ -83,7 +90,7 @@ int run_loop(void) {
 		return 1;
 	}
 
-	debug_loop();
+	//  debug_loop();
 
 	if (send_packets()) {
 		return 1;
