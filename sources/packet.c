@@ -25,11 +25,12 @@ void setup_packet(struct icmp *h, void *p, size_t p_siz, short seq) {
 	h->icmp_code  = 0;
 	h->icmp_id	  = getpid();
 	h->icmp_seq	  = (seq >> 8) | (seq << 8);
+	h->icmp_cksum = 0;	// NOTE: needs to reset cksum
 	h->icmp_cksum = get_cksum((unsigned short *)p, p_siz);
 }
 
 int validate_packet(void *s, void *r, short p_siz) {
-	struct icmp *rp = (struct icmp *)(r + 20);	// NOTE: Because of ipv4 header
+	struct icmp *rp = (struct icmp *)(r + 20);	// NOTE: +20 Because of ipv4 header
 	struct icmp *sp = (struct icmp *)s;
 
 	if (rp->icmp_type != ICMP_ECHOREPLY) {

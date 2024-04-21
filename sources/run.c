@@ -58,8 +58,9 @@ int send_packets(void) {
 			return 1;
 		}
 
-		char	buf[PACKET_SIZE];
-		ssize_t r = recvfrom(loop.sockfd, buf, PACKET_SIZE, 0, NULL, NULL);
+		char	buf[PACKET_SIZE + 20];	// NOTE: +20 Because of ivp4 header
+		ssize_t r = recvfrom(loop.sockfd, buf, PACKET_SIZE + 20, 0, NULL, NULL);
+
 		if (r < 0) {
 			perror("recvfrom");
 			close(loop.sockfd);
