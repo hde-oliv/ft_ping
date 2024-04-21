@@ -1,6 +1,7 @@
 #pragma once
 
 #include <arpa/inet.h>
+#include <bits/time.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -13,6 +14,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
 #include <uchar.h>
 #include <unistd.h>
 

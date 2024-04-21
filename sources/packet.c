@@ -27,12 +27,14 @@ static void fill_packet(char *p, int p_size) {
 	struct timespec ts;
 
 	clock_gettime(CLOCK_REALTIME, &ts);
-	memcpy(p, &ts.tv_sec, 4);
-	p += 4;
-	memset(p, 0, 4);
-	p += 4;
 
-	p_size = p_size - 8 - 8;
+	// TODO: Refactor
+	memcpy(p, &ts.tv_sec, 8);
+	p += 8;
+	memcpy(p, &ts.tv_nsec, 8);
+	p += 8;
+
+	p_size = p_size - 8 - 8 - 8;
 
 	for (int i = 0; i < p_size; i++) {
 		*p++ = i;
