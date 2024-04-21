@@ -79,6 +79,7 @@ int parse_args(int argc, char **argv);
 
 // Debug
 void debug_args(void);
+void debug_loop(void);
 
 // Run
 int run_loop(void);
