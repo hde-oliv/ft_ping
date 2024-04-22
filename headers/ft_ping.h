@@ -1,11 +1,13 @@
 #pragma once
 
 #include <arpa/inet.h>
+#include <asm-generic/errno.h>
 #include <bits/time.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +19,9 @@
 #include <time.h>
 #include <uchar.h>
 #include <unistd.h>
+
+#define SECOND 1000000
+#define MILLION 1000000
 
 typedef enum e_flags {
 	F_e	   = 0b0000000000000001,
@@ -70,12 +75,23 @@ typedef struct s_args {
 	char  *hostname;
 } args_t;
 
+typedef struct s_stats {
+	size_t min;
+	size_t max;
+	size_t avg;
+	size_t dev;
+	size_t last;
+	short  send;
+	short  recv;
+} stats_t;
+
 typedef struct s_loop {
 	struct addrinfo *result;
 	struct addrinfo *rp;
 	struct addrinfo	 hints;
 	int				 sockfd;
 	char			 ipstr[INET6_ADDRSTRLEN];
+	stats_t			 stats;
 } loop_t;
 
 typedef struct s_icmp {
@@ -96,9 +112,31 @@ void debug_loop(void);
 void print_bytes(int size, void *ptr);
 void print_bits(int size, void *ptr);
 
-// Run
-int run_loop(void);
+// Loop
+void run_loop(void);
 
 // Packet
 void setup_packet(void *p, size_t p_siz, short seq);
-int	 validate_packet(void *s, void *r, short p_siz);
+void validate_packet(void *s, void *r, short p_siz);
+void send_packet(void *time, void *packet, int p_siz);
+void read_packet(void *time, void *packet, int p_siz);
+
+// Socket
+void setup_socket(void);
+
+// Panic
+void panic(char *func);
+
+// Print
+void print_response(void *res, short seq, int p_siz);
+void print_info(void);
+void print_statistics(void);
+
+// Clear
+void clear(void);
+
+// Time
+void update_time(void *s, void *e);
+
+// Signal
+int signal_setup(void);

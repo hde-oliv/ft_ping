@@ -1,6 +1,8 @@
 #include "ft_ping.h"
 
-static unsigned short get_cksum(unsigned short *b, int len) {
+extern loop_t loop;
+
+unsigned short get_cksum(unsigned short *b, int len) {
 	unsigned sum;
 	for (sum = 0; len > 1; len -= 2) {
 		sum += *b++;
@@ -15,7 +17,7 @@ static unsigned short get_cksum(unsigned short *b, int len) {
 	return ~sum;
 }
 
-static void fill_packet(char *p, int p_size) {
+void fill_packet(char *p, int p_size) {
 	struct timespec ts;
 
 	clock_gettime(CLOCK_REALTIME, &ts);
@@ -41,7 +43,7 @@ void setup_packet(void *p, size_t p_siz, short seq) {
 	h->type	 = ICMP_ECHO;
 	h->code	 = 0;
 	h->id	 = (short)getpid();
-	h->seq	 = (seq >> 8) | (seq << 8);
+	h->seq	 = htons(seq);
 	h->cksum = 0;
 
 	fill_packet(&h->data, p_siz);
@@ -49,30 +51,61 @@ void setup_packet(void *p, size_t p_siz, short seq) {
 	h->cksum = get_cksum((unsigned short *)p, p_siz);
 }
 
-int validate_packet(void *s, void *r, short p_siz) {
-	struct icmp *rp = (struct icmp *)(r + 20);	// NOTE: +20 Because of ipv4 header
+void validate_packet(void *s, void *r, short p_siz) {
+	// NOTE: +20 Because of ipv4 header
+	struct icmp *rp = (struct icmp *)(r + 20);
 	struct icmp *sp = (struct icmp *)s;
+
+	int err = 0;
 
 	if (rp->icmp_type != ICMP_ECHOREPLY) {
 		fprintf(stderr, "invalid type %hu\n", rp->icmp_type);
-		return 1;
+		err = 1;
 	}
 	if (rp->icmp_code != 0) {
 		fprintf(stderr, "invalid code\n");
-		return 1;
+		err = 1;
 	}
 	if (rp->icmp_id != sp->icmp_id) {
 		fprintf(stderr, "invalid id\n");
-		return 1;
+		err = 1;
 	}
 	if (rp->icmp_seq != sp->icmp_seq) {
 		fprintf(stderr, "invalid seq\n");
-		return 1;
+		err = 1;
 	}
 	if (rp->icmp_code != get_cksum((unsigned short *)rp, p_siz)) {
 		fprintf(stderr, "invalid cksum\n");
-		return 1;
+		err = 1;
 	}
 
-	return 0;
+	if (err) {
+		errno = EBADMSG;
+		panic("validate_packet");
+	}
+}
+
+void send_packet(void *time, void *packet, int p_siz) {
+	ssize_t err;
+
+	err = clock_gettime(CLOCK_REALTIME, (struct timespec *)time);
+	if (err == -1) panic("clock_gettime");
+
+	err = sendto(loop.sockfd, packet, p_siz, 0, loop.rp->ai_addr, loop.rp->ai_addrlen);
+	if (err < 0) panic("sendto");
+
+	loop.stats.send++;
+}
+
+void read_packet(void *time, void *packet, int p_siz) {
+	ssize_t err;
+
+	err = recvfrom(loop.sockfd, packet, p_siz, 0, loop.rp->ai_addr, &loop.rp->ai_addrlen);
+	if (err < 0) panic("recvfrom");
+
+	err = clock_gettime(CLOCK_REALTIME, (struct timespec *)time);
+
+	if (err == -1) panic("clock_gettime");
+
+	loop.stats.recv++;
 }

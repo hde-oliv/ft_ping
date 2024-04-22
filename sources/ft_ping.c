@@ -17,12 +17,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	// debug_args();
-
-	if (run_loop()) {
-		fprintf(stderr, "error: running loop\n");
+	if (signal_setup()) {
+		fprintf(stderr, "error: signal config\n");
 		return 1;
 	}
+
+	run_loop();
 
 	return 0;
 }
