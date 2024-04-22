@@ -6,10 +6,9 @@ void update_time(void *s, void *e) {
 	struct timespec *start = s;
 	struct timespec *end   = e;
 
-	size_t sts = ((start->tv_sec * 1000) + (start->tv_nsec / 1000000));
-	size_t ets = ((end->tv_sec * 1000) + (end->tv_nsec / 1000000));
-
-	size_t time = ets - sts;
+	double sts	= ((start->tv_sec * 1000) + (start->tv_nsec / 1000000.0));
+	double ets	= ((end->tv_sec * 1000) + (end->tv_nsec / 1000000.0));
+	double time = ets - sts;
 
 	loop.stats.last = time;
 
@@ -33,4 +32,7 @@ void update_time(void *s, void *e) {
 	}
 
 	loop.stats.avg = ((loop.stats.avg + time) / 2);
+	loop.stats.sq += time * time;
+	loop.stats.tl += time;
+	loop.stats.runs++;
 }

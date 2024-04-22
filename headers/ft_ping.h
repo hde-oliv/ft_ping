@@ -4,6 +4,7 @@
 #include <asm-generic/errno.h>
 #include <bits/time.h>
 #include <errno.h>
+#include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
@@ -22,6 +23,14 @@
 
 #define SECOND 1000000
 #define MILLION 1000000
+
+#define CYAN "\033[0;36m"
+#define RED "\033[0;31m"
+#define BLUE "\033[0;34m"
+#define PURPLE "\033[0;35m"
+#define RESET "\033[0m"
+#define GREEN "\033[0;32m"
+#define YELLOW "\033[0;33m"
 
 typedef enum e_flags {
 	F_e	   = 0b0000000000000001,
@@ -76,13 +85,16 @@ typedef struct s_args {
 } args_t;
 
 typedef struct s_stats {
-	size_t min;
-	size_t max;
-	size_t avg;
-	size_t dev;
-	size_t last;
+	double min;
+	double max;
+	double avg;
+	double dev;
+	double last;
 	short  send;
 	short  recv;
+	double sq;
+	double tl;
+	short  runs;
 } stats_t;
 
 typedef struct s_loop {
@@ -131,6 +143,7 @@ void panic(char *func);
 void print_response(void *res, short seq, int p_siz);
 void print_info(void);
 void print_statistics(void);
+void print_help(void);
 
 // Clear
 void clear(void);

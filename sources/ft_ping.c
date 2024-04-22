@@ -17,6 +17,11 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	if (args.opt.n & F_q) {
+		print_help();
+		return 0;
+	}
+
 	if (signal_setup()) {
 		fprintf(stderr, "error: signal config\n");
 		return 1;

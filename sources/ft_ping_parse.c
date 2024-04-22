@@ -7,7 +7,7 @@ extern args_t args;
 
 static int match_flag(char *f) {
 	char *lookup[] = {
-		"", "-v", "-q", "-f", "-l", "-n", "-w", "-W", "-p", "-r", "-s", "-T", "--ttl", "--ip-timestamp", NULL,
+		"", "-v", "-?", "-f", "-l", "-n", "-w", "-W", "-p", "-r", "-s", "-T", "--ttl", "--ip-timestamp", NULL,
 	};
 
 	for (int i = 0; lookup[i] != NULL; i++) {
